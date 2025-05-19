@@ -653,13 +653,14 @@ defmodule Web.Policies.Components do
         <div class="space-y-2">
           <.input
             type="checkbox"
-            label="Require client verification"
+            label="Require client verification" 
             field={condition_form[:values]}
-            name="policy[conditions][client_verified][values][]"
+            name="policy[conditions][client_verified][values]"
             id="policy_conditions_client_verified_value"
             disabled={@disabled}
-            checked={List.first(List.wrap(condition_form[:values].value)) == "true"}
+            checked={condition_form[:values].value == "true"}
             value="true"
+            phx-update="ignore"
           />
         </div>
       </div>
