@@ -189,6 +189,20 @@ defmodule API.Client.Channel do
     end
   end
 
+  @doc """
+  Handles client sign-out request by invalidating the token server-side and disconnecting the client.
+  """
+  def handle_in("sign_out", _params, socket) do
+    OpenTelemetry.Ctx.attach(socket.assigns.opentelemetry_ctx)
+    OpenTelemetry.Tracer.set_current_span(socket.assigns.opentelemetry_span_ctx)
+
+    OpenTelemetry.Tracer.with_span "client.sign_out" do
+      {:ok, _token} = Domain.Tokens.delete_token_for(socket.assigns.subject)
+      push(socket, "disconnect", %{reason: :signed_out})
+      {:stop, {:shutdown, :signed_out}, socket}
+    end
+  end
+
   # This event is broadcasted when client or actor group was changed (eg. renamed, verified, etc.),
   # so we just re-initialize the client the same way as after join to push the updates
   def handle_info(:updated, socket) do
