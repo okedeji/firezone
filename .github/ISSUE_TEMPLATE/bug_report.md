@@ -1,9 +1,10 @@
 ---
 name: Bug report
 about: Create a bug report
-title: ""
-labels: "needs triage"
-assignees: ""
+title: ''
+labels: ''
+assignees: ''
+
 ---
 
 #### Describe the bug
