@@ -227,8 +227,8 @@ defmodule Domain.Auth.Adapters.GoogleWorkspace.APIClient do
 
         {:error, :invalid_response}
 
-      # This is expected if the group has no members or we're on the last page
-      :error when key == "members" ->
+      # This is expected if the group has no members/groups or we're on the last page
+      :error when key in ["members", "groups"] ->
         {:ok, [], nil}
 
       :error ->
