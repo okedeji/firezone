@@ -176,6 +176,7 @@ defmodule Domain.Auth.Adapters.GoogleWorkspace.APIClient do
   # stop.
   #
   # For members, this happens quite often and we want to return an empty list.
+  # For groups, an empty response is invalid as no organization should have zero groups.
   defp list(uri, api_token, key) do
     request = Finch.build(:get, uri, [{"Authorization", "Bearer #{api_token}"}])
     response = Finch.request(request, @pool_name)
@@ -183,7 +184,15 @@ defmodule Domain.Auth.Adapters.GoogleWorkspace.APIClient do
     with {:ok, %Finch.Response{body: raw_body, status: 200}} <- response,
          {:ok, json_response} <- Jason.decode(raw_body),
          {:ok, list} when is_list(list) <- Map.fetch(json_response, key) do
-      {:ok, list, json_response["nextPageToken"]}
+      # Return error if groups list is empty as this is considered invalid
+      if key == "groups" and list == [] do
+        Logger.warning("API request returned empty groups list which is invalid",
+          response: inspect(response)
+        )
+        {:error, :invalid_response}
+      else
+        {:ok, list, json_response["nextPageToken"]}
+      end
     else
       {:ok, %Finch.Response{status: status}} when status in 201..299 ->
         Logger.warning("API request succeeded with unexpected 2xx status #{status}",
