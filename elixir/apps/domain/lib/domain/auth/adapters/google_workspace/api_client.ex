@@ -183,7 +183,16 @@ defmodule Domain.Auth.Adapters.GoogleWorkspace.APIClient do
     with {:ok, %Finch.Response{body: raw_body, status: 200}} <- response,
          {:ok, json_response} <- Jason.decode(raw_body),
          {:ok, list} when is_list(list) <- Map.fetch(json_response, key) do
-      {:ok, list, json_response["nextPageToken"]}
+      # Empty groups list is treated as an error since no organization should have zero groups
+      # Empty members list is still valid since groups can be empty
+      if list == [] and key == "groups" do
+        Logger.error("API request returned empty groups list which is invalid",
+          response: inspect(response)
+        )
+        {:error, :invalid_response}
+      else
+        {:ok, list, json_response["nextPageToken"]}
+      end
     else
       {:ok, %Finch.Response{status: status}} when status in 201..299 ->
         Logger.warning("API request succeeded with unexpected 2xx status #{status}",
