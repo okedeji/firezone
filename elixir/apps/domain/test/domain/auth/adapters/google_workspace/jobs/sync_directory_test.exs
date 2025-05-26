@@ -40,7 +40,7 @@ defmodule Domain.Auth.Adapters.GoogleWorkspace.Jobs.SyncDirectoryTest do
       GoogleWorkspaceDirectory.mock_groups_list_endpoint(
         bypass,
         200,
-        Jason.encode!(%{"groups" => []})
+        Jason.encode!(%{"groups" => [%{"id" => "test_group", "name" => "Test Group"}]})
       )
 
       GoogleWorkspaceDirectory.mock_organization_units_list_endpoint(
@@ -52,10 +52,17 @@ defmodule Domain.Auth.Adapters.GoogleWorkspace.Jobs.SyncDirectoryTest do
       GoogleWorkspaceDirectory.mock_users_list_endpoint(
         bypass,
         200,
-        Jason.encode!(%{"users" => []})
+        Jason.encode!(%{"users" => [%{"id" => "test_user", "name" => %{"fullName" => "Test User"}, "primaryEmail" => "test@example.com", "orgUnitPath" => "/"}]})
       )
 
       GoogleWorkspaceDirectory.mock_token_endpoint(bypass)
+
+      GoogleWorkspaceDirectory.mock_group_members_list_endpoint(
+        bypass,
+        "test_group",
+        200,
+        Jason.encode!(%{"members" => []})
+      )
 
       {:ok, pid} = Task.Supervisor.start_link()
       assert execute(%{task_supervisor: pid}) == :ok
@@ -100,7 +107,7 @@ defmodule Domain.Auth.Adapters.GoogleWorkspace.Jobs.SyncDirectoryTest do
       GoogleWorkspaceDirectory.mock_groups_list_endpoint(
         bypass,
         200,
-        Jason.encode!(%{"groups" => []})
+        Jason.encode!(%{"groups" => [%{"id" => "test_group", "name" => "Test Group"}]})
       )
 
       GoogleWorkspaceDirectory.mock_organization_units_list_endpoint(
@@ -112,7 +119,7 @@ defmodule Domain.Auth.Adapters.GoogleWorkspace.Jobs.SyncDirectoryTest do
       GoogleWorkspaceDirectory.mock_users_list_endpoint(
         bypass,
         200,
-        Jason.encode!(%{"users" => []})
+        Jason.encode!(%{"users" => [%{"id" => "test_user", "name" => %{"fullName" => "Test User"}, "primaryEmail" => "test@example.com", "orgUnitPath" => "/"}]})
       )
 
       provider
@@ -120,6 +127,13 @@ defmodule Domain.Auth.Adapters.GoogleWorkspace.Jobs.SyncDirectoryTest do
         adapter_config: Map.put(provider.adapter_config, "service_account_json_key", nil)
       )
       |> Repo.update!()
+
+      GoogleWorkspaceDirectory.mock_group_members_list_endpoint(
+        bypass,
+        "test_group",
+        200,
+        Jason.encode!(%{"members" => []})
+      )
 
       {:ok, pid} = Task.Supervisor.start_link()
       assert execute(%{task_supervisor: pid}) == :ok
@@ -398,7 +412,7 @@ defmodule Domain.Auth.Adapters.GoogleWorkspace.Jobs.SyncDirectoryTest do
       GoogleWorkspaceDirectory.mock_groups_list_endpoint(
         bypass,
         200,
-        Jason.encode!(%{"groups" => []})
+        Jason.encode!(%{"groups" => [%{"id" => "test_group", "name" => "Test Group"}]})
       )
 
       GoogleWorkspaceDirectory.mock_organization_units_list_endpoint(
@@ -414,6 +428,13 @@ defmodule Domain.Auth.Adapters.GoogleWorkspace.Jobs.SyncDirectoryTest do
       )
 
       GoogleWorkspaceDirectory.mock_token_endpoint(bypass)
+
+      GoogleWorkspaceDirectory.mock_group_members_list_endpoint(
+        bypass,
+        "test_group",
+        200,
+        Jason.encode!(%{"members" => []})
+      )
 
       {:ok, pid} = Task.Supervisor.start_link()
       assert execute(%{task_supervisor: pid}) == :ok
@@ -801,7 +822,7 @@ defmodule Domain.Auth.Adapters.GoogleWorkspace.Jobs.SyncDirectoryTest do
       GoogleWorkspaceDirectory.mock_groups_list_endpoint(
         bypass,
         200,
-        Jason.encode!(%{"groups" => []})
+        Jason.encode!(%{"groups" => [%{"id" => "test_group", "name" => "Test Group"}]})
       )
 
       GoogleWorkspaceDirectory.mock_organization_units_list_endpoint(
@@ -817,6 +838,13 @@ defmodule Domain.Auth.Adapters.GoogleWorkspace.Jobs.SyncDirectoryTest do
       )
 
       GoogleWorkspaceDirectory.mock_token_endpoint(bypass)
+
+      GoogleWorkspaceDirectory.mock_group_members_list_endpoint(
+        bypass,
+        "test_group",
+        200,
+        Jason.encode!(%{"members" => []})
+      )
 
       {:ok, pid} = Task.Supervisor.start_link()
       assert execute(%{task_supervisor: pid}) == :ok

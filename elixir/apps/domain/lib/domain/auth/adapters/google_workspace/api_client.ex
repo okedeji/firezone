@@ -182,8 +182,9 @@ defmodule Domain.Auth.Adapters.GoogleWorkspace.APIClient do
 
     with {:ok, %Finch.Response{body: raw_body, status: 200}} <- response,
          {:ok, json_response} <- Jason.decode(raw_body),
-         {:ok, list} when is_list(list) <- Map.fetch(json_response, key) do
-      {:ok, list, json_response["nextPageToken"]}
+         {:ok, list} when is_list(list) <- Map.fetch(json_response, key),
+         {:ok, validated_list} <- validate_list_content(list, key) do
+      {:ok, validated_list, json_response["nextPageToken"]}
     else
       {:ok, %Finch.Response{status: status}} when status in 201..299 ->
         Logger.warning("API request succeeded with unexpected 2xx status #{status}",
@@ -248,5 +249,28 @@ defmodule Domain.Auth.Adapters.GoogleWorkspace.APIClient do
 
         other
     end
+  end
+
+  # Validates that the list content is appropriate for the given key.
+  # For groups and users, empty lists are considered invalid as no organization
+  # should have zero groups or users.
+  # For members, empty lists are valid as groups can have no members.
+  defp validate_list_content(list, key) when key in ["groups", "users"] do
+    case list do
+      [] ->
+        Logger.warning("API returned empty list for #{key}, treating as invalid response",
+          key: key,
+          list_length: 0
+        )
+
+        {:error, :invalid_response}
+
+      non_empty_list ->
+        {:ok, non_empty_list}
+    end
+  end
+
+  defp validate_list_content(list, _key) do
+    {:ok, list}
   end
 end

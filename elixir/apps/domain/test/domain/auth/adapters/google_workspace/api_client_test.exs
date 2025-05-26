@@ -115,6 +115,19 @@ defmodule Domain.Auth.Adapters.GoogleWorkspace.APIClientTest do
       GoogleWorkspaceDirectory.mock_users_list_endpoint(bypass, 200, "invalid json")
       assert {:error, %Jason.DecodeError{data: "invalid json"}} = list_users(api_token)
     end
+
+    test "returns invalid_response when api responds with empty users list" do
+      api_token = Ecto.UUID.generate()
+      bypass = Bypass.open()
+
+      GoogleWorkspaceDirectory.mock_users_list_endpoint(
+        bypass,
+        200,
+        Jason.encode!(%{"users" => []})
+      )
+
+      assert list_users(api_token) == {:error, :invalid_response}
+    end
   end
 
   describe "list_organization_units/1" do
@@ -317,6 +330,19 @@ defmodule Domain.Auth.Adapters.GoogleWorkspace.APIClientTest do
       GoogleWorkspaceDirectory.mock_groups_list_endpoint(bypass, 200, "invalid json")
       assert {:error, %Jason.DecodeError{data: "invalid json"}} = list_groups(api_token)
     end
+
+    test "returns invalid_response when api responds with empty groups list" do
+      api_token = Ecto.UUID.generate()
+      bypass = Bypass.open()
+
+      GoogleWorkspaceDirectory.mock_groups_list_endpoint(
+        bypass,
+        200,
+        Jason.encode!(%{"groups" => []})
+      )
+
+      assert list_groups(api_token) == {:error, :invalid_response}
+    end
   end
 
   describe "list_group_members/1" do
@@ -437,6 +463,21 @@ defmodule Domain.Auth.Adapters.GoogleWorkspace.APIClientTest do
 
       assert {:error, %Jason.DecodeError{data: "invalid json"}} =
                list_group_members(api_token, group_id)
+    end
+
+    test "returns empty list when api responds with empty members list" do
+      api_token = Ecto.UUID.generate()
+      group_id = Ecto.UUID.generate()
+      bypass = Bypass.open()
+
+      GoogleWorkspaceDirectory.mock_group_members_list_endpoint(
+        bypass,
+        group_id,
+        200,
+        Jason.encode!(%{"members" => []})
+      )
+
+      assert list_group_members(api_token, group_id) == {:ok, []}
     end
   end
 end
