@@ -308,8 +308,30 @@ impl WrappedSession {
     fn set_dns(&mut self, dns_servers: String) -> Result<()> {
         tracing::debug!(%dns_servers);
 
-        let dns_servers = serde_json::from_str(&dns_servers)
+        let dns_server_strings: Vec<String> = serde_json::from_str(&dns_servers)
             .context("Failed to deserialize DNS servers from JSON")?;
+
+        let mut dns_servers = Vec::new();
+        for dns_str in dns_server_strings {
+            // Filter out IPv6 addresses with scopes (e.g., "fe80::1%en0")
+            // as they are not supported by connlib
+            if dns_str.contains('%') {
+                tracing::warn!("Skipping IPv6 address with scope: {}", dns_str);
+                continue;
+            }
+
+            match dns_str.parse::<IpAddr>() {
+                Ok(ip) => dns_servers.push(ip),
+                Err(e) => {
+                    tracing::warn!("Failed to parse DNS server '{}': {}", dns_str, e);
+                    // Continue processing other DNS servers instead of failing completely
+                }
+            }
+        }
+
+        if dns_servers.is_empty() {
+            tracing::warn!("No valid DNS servers found after parsing");
+        }
 
         self.inner.set_dns(dns_servers);
 
